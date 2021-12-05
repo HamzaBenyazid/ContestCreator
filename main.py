@@ -7,6 +7,8 @@ from getpass import getpass
 import enum
 import  time
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.chrome.options import Options
 
 
 class ParticipationType(enum.Enum):
@@ -34,7 +36,7 @@ class Contest :
         handle_field.send_keys(handle)
         password_field.send_keys(password)
         password_field.submit()
-        WebDriverWait(browser,10).until(EC.presence_of_element_located((By.LINK_TEXT,handle)))
+        WebDriverWait(browser,60).until(EC.url_to_be("https://codeforces.com/"))
 
     def createMashupContest(self,browser):
         browser.get("https://codeforces.com/mashup/new")
@@ -64,6 +66,7 @@ class Contest :
         participation_type_field.select_by_value(self.participation_type.name)
         browser.find_element(By.ID,"generic").click()
         time.sleep(1)
+        print("contest created.")
 
     def addContestToGroup(self,group_id):
         browser.get("https://codeforces.com/group/"+group_id+"/contests/add")
@@ -72,13 +75,25 @@ class Contest :
         browser.find_element(By.ID,"submit").click()
         time.sleep(1)
         browser.find_element(By.NAME,"codeforces-dialog-ok-button").click()
+        print("contest added to your group.")
 
     def create(self,browser,handle:str,password:str,group_id):
         self.login(browser,handle,password)
         self.createMashupContest(browser)
         self.addOtherParameters(browser)
-        self.addContestToGroup(group_id)
+        if group_id!=None:
+            self.addContestToGroup(group_id)
         
+
+def initialize_selenium():
+    CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
+    WINDOW_SIZE = "1920,1080"
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+
+    return webdriver.Chrome(options=chrome_options)
 
 if __name__ == "__main__":
     handle =input("handle or email:")
@@ -90,11 +105,16 @@ if __name__ == "__main__":
     participation_type =ParticipationType(int(input("participation type ? \n1 - persons only\n2- persons and teams\n3 - teams only\n")))
     problems_file = open(input("problems file's path :"),"r")
     problems = problems_file.readlines()
-    group_id = input("group id (you can find the id in group's url ,ex : for https://codeforces.com/group/xxxxxxxx/contests \nthe 'xxxxxxxx' is the id.) :")
+    add_to_group = (input("Do you want to add it to a group ?(y/n) : ")=="y")
+    group_id = None
+    if add_to_group :
+        group_id = input("group id (you can find the id in group's url ,ex : for https://codeforces.com/group/xxxxxxxx/contests \nthe 'xxxxxxxx' is the id.) :")
 
-    browser = webdriver.Chrome()
+    browser = initialize_selenium()
 
     contest = Contest(name,problems,start_date,start_time,participation_type,duration)
     contest.create(browser,handle,password,group_id)
+    print("Done :)")
+    browser.close()
 
 
