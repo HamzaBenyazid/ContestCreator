@@ -43,10 +43,11 @@ class Contest :
 
         for problem in self.problems:
             problem_box.send_keys(problem)
-            problem_box.send_keys(Keys.ENTER)
+            problem_box = browser.find_elements(By.CLASS_NAME,"ac_input")[-1]
+            WebDriverWait(browser,60).until(EC.element_to_be_clickable(problem_box))
         
         button = browser.find_elements(By.CLASS_NAME,"submit")[-1]
-        time.sleep(1)
+        WebDriverWait(browser,10).until(EC.element_to_be_clickable(button))
         button.click()
         time.sleep(1)
 
@@ -68,12 +69,11 @@ class Contest :
     def addContestToGroup(self,browser,group_id):
         browser.get("https://codeforces.com/group/"+group_id+"/contests/add")
         browser.find_element(By.ID,"contestIdAndName").send_keys(self.id)
-        time.sleep(1)
-        browser.find_element(By.ID,"submit").click()
-        time.sleep(1)
-        browser.find_element(By.NAME,"codeforces-dialog-ok-button").click()
+        WebDriverWait(browser,10).until(EC.element_to_be_clickable((By.ID,"submit"))).click()
+        WebDriverWait(browser,10).until(EC.element_to_be_clickable((By.NAME,"codeforces-dialog-ok-button"))).click()
         print("contest added to your group.")
-
+        time.sleep(3)
+        
     def create(self,browser,handle:str,password:str,group_id):
         self.login(browser,handle,password)
         self.createMashupContest(browser)
